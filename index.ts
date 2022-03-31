@@ -44,61 +44,6 @@ routerStripe.post("/create-payment-intent", async (req, res) => {
   }
 });
 
-routerStripe.post("/payment-card", async (req, res) => {
-  const { payment_method, customers, amount, currency } = req.body;
-
-  const total = amount.toFixed(0);
-  try {
-    const paymentIntent = await Stripe.paymentIntents.create({
-      payment_method: payment_method,
-      amount: total,
-      currency: currency ? currency : "usd",
-      customer: customers,
-      confirmation_method: "automatic",
-      confirm: true,
-    });
-    if (paymentIntent.status === "succeeded") {
-      res.status(200).json(paymentIntent).end();
-    } else if (paymentIntent.status === "canceled") {
-      res.status(400).json(paymentIntent).end();
-    } else if (paymentIntent.status === "requires_action") {
-      res.status(200).json(paymentIntent).end();
-    } else {
-      res.status(400).json(paymentIntent).end();
-    }
-  } catch (err) {
-    console.log("Error code is: ", err);
-    const paymentIntentRetrieved = await Stripe.paymentIntents.retrieve(
-      //@ts-ignore
-      err.raw.payment_intent.id
-    );
-    console.log("PI retrieved: ", paymentIntentRetrieved.id);
-    res.status(400).json(paymentIntentRetrieved).end();
-  }
-});
-
-routerStripe.post("/create-card", async (req, res) => {
-  const { customer, paymentMethod } = req.body;
-  const paymentMethods = await Stripe.paymentMethods.attach(paymentMethod, {
-    customer: customer,
-  });
-
-  if (paymentMethods) {
-    res
-      .status(200)
-      .json({
-        success: true,
-        message: "success_add_card",
-        data: paymentMethods,
-      })
-      .end();
-  } else {
-    res
-      .status(400)
-      .json({ success: false, message: "error_add_card", data: null })
-      .end();
-  }
-});
 
 routerStripe.post("/delete-card", async (req, res) => {
   const { cardID } = req.body;
